@@ -1,0 +1,42 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.2.0
+    hooks:
+      - id: check-ast
+      - id: check-added-large-files
+      - id: check-builtin-literals
+      - id: check-case-conflict
+      - id: check-docstring-first
+      - id: check-executables-have-shebangs
+      - id: pretty-format-json
+      - id: check-merge-conflict
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: no-commit-to-branch
+      - id: requirements-txt-fixer
+      - id: trailing-whitespace
+
+  - repo: https://github.com/psf/black
+    rev: 22.3.0
+    hooks:
+      - id: black
+        args: [--line-length=120]
+        exclude: .*_pb2\.pyi?
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.10.1
+    hooks:
+      - id: isort
+        args: [--profile, black, --filter-files]
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v0.982
+    hooks:
+      - id: mypy
+        pass_filenames: false
+        args: []
+
+  - repo: https://github.com/KenjiTakahashi-Rial/check-requirements
+    rev: 410897896f48827c5a7e040b5fad56b2a7194a47
+    hooks:
+      - id: check-requirements
