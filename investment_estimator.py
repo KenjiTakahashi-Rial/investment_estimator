@@ -83,7 +83,8 @@ class InvestmentEstimator:
                 input_str = input_str[:-1]
                 return float(input_str) / 100
 
-            return float(input_str)
+            as_float = float(input_str)
+            return as_float if as_float < 1 else as_float / 100
 
         return int(
             InvestmentEstimator._get_input(
