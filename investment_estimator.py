@@ -59,10 +59,6 @@ class InvestmentEstimator:
             self._age = age
 
     def _get_inputs(self) -> None:
-        self._cap_gains_rate = float_input(
-            f"Long-term capital gains tax rate (default {self._DEFAULT_CAP_GAINS_RATE * 100:.0f}%): ",
-            self._DEFAULT_CAP_GAINS_RATE,
-        )
         self._principal = int_input(f"Principal amount (default ${self._DEFAULT_PRINCIPAL}): ", self._DEFAULT_PRINCIPAL)
         self._annual_return_rate = float_input(
             f"Average annual rate of return of your investment (default {self._DEFAULT_ANNUAL_RETURN_RATE * 100:.0f}%): ",
@@ -74,6 +70,10 @@ class InvestmentEstimator:
         )
         self._years_to_invest = int_input(
             f"Years to invest (default {self._DEFAULT_YEARS_TO_INVEST}): ", self._DEFAULT_YEARS_TO_INVEST
+        )
+        self._cap_gains_rate = float_input(
+            f"Long-term capital gains tax rate (default {self._DEFAULT_CAP_GAINS_RATE * 100:.0f}%): ",
+            self._DEFAULT_CAP_GAINS_RATE,
         )
         self._age = int_input(f"Age (Enter to skip): ", 0)
 
