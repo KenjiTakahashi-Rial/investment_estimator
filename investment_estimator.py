@@ -86,10 +86,8 @@ class InvestmentEstimator:
             as_float = float(input_str)
             return as_float if as_float < 1 else as_float / 100
 
-        return int(
-            InvestmentEstimator._get_input(
-                prompt, error_prompt, convert_fn, default=default, enforce_positive=enforce_positive
-            )
+        return InvestmentEstimator._get_input(
+            prompt, error_prompt, convert_fn, default=default, enforce_positive=enforce_positive
         )
 
     @staticmethod
@@ -133,7 +131,7 @@ class InvestmentEstimator:
     def _invest_monthly(self, months: int) -> float:
         total = 0.0
 
-        for i in range(months):
+        for _ in range(months):
             total += self._monthly_contribution
             total *= 1 + (self._annual_return_rate / 12)
 
