@@ -19,6 +19,8 @@ LARGEST_NUM_ABBREVIATION = list(LARGE_NUM_ABBREVIATIONS.values())[-1]
 class InvestmentEstimator:
     _DEFAULT_ANNUAL_RETURN_RATE = 0.1
     _DEFAULT_CAP_GAINS_RATE = 0.15
+    _DEFAULT_MONTHLY_CONTRIBUTION = 0
+    _DEFAULT_PRINCIPAL = 0
     _DEFAULT_YEARS_TO_INVEST = 20
     _LEFT_DIGITS_TO_ROUND_TO = 3
     _YEAR_CHECKPOINT_STEP = 5
@@ -26,21 +28,25 @@ class InvestmentEstimator:
     def __init__(
         self,
         cap_gains_rate: Optional[float] = None,
+        principal: Optional[int] = None,
         annual_return_rate: Optional[float] = None,
         monthly_contribution: Optional[int] = None,
         years_to_invest: Optional[int] = None,
         age: Optional[int] = None,
     ):
         self._cap_gains_rate = self._DEFAULT_CAP_GAINS_RATE
+        self._principal = self._DEFAULT_PRINCIPAL
         self._annual_return_rate = self._DEFAULT_ANNUAL_RETURN_RATE
-        self._monthly_contribution: int
-        self._years_to_invest: int
+        self._monthly_contribution = self._DEFAULT_MONTHLY_CONTRIBUTION
+        self._years_to_invest = self._DEFAULT_YEARS_TO_INVEST
         self._age: int
 
         self._year_checkpoints: tuple[int, ...]
 
         if cap_gains_rate is not None:
             self._cap_gains_rate = cap_gains_rate
+        if principal is not None:
+            self._principal = principal
         if annual_return_rate is not None:
             self._annual_return_rate = annual_return_rate
         if monthly_contribution is not None:
@@ -95,7 +101,8 @@ class InvestmentEstimator:
         error_prompt = "Please enter a positive integer: "
 
         def convert_fn(input_str: str) -> int:
-            return int(input_str)
+            digit_str = "".join([c for c in input_str if c.isdigit()])
+            return int(digit_str)
 
         return int(
             InvestmentEstimator._get_input(
@@ -108,11 +115,17 @@ class InvestmentEstimator:
             f"Long-term capital gains tax rate (default {self._DEFAULT_CAP_GAINS_RATE * 100:.0f}%): ",
             self._DEFAULT_CAP_GAINS_RATE,
         )
+        self._principal = self._get_int_input(
+            f"Principal amount (default ${self._DEFAULT_PRINCIPAL}): ", self._DEFAULT_PRINCIPAL
+        )
         self._annual_return_rate = self._get_percent_input(
             f"Average annual rate of return of your investment (default {self._DEFAULT_ANNUAL_RETURN_RATE * 100:.0f}%): ",
             self._DEFAULT_ANNUAL_RETURN_RATE,
         )
-        self._monthly_contribution = self._get_int_input(f"Monthly contribution: ")
+        self._monthly_contribution = self._get_int_input(
+            f"Monthly contribution (default ${self._DEFAULT_MONTHLY_CONTRIBUTION}): ",
+            self._DEFAULT_MONTHLY_CONTRIBUTION,
+        )
         self._years_to_invest = self._get_int_input(
             f"Years to invest (default {self._DEFAULT_YEARS_TO_INVEST}): ", self._DEFAULT_YEARS_TO_INVEST
         )
@@ -129,7 +142,7 @@ class InvestmentEstimator:
         self._year_checkpoints = tuple(year_checkpoints)
 
     def _invest_monthly(self, months: int) -> float:
-        total = 0.0
+        total = float(self._principal)
 
         for _ in range(months):
             total += self._monthly_contribution
@@ -169,7 +182,7 @@ class InvestmentEstimator:
                 )
                 return
 
-            principal = self._monthly_contribution * months
+            principal = self._principal + self._monthly_contribution * months
             profit = total - principal
             annual_return = total * self._annual_return_rate
             annual_return_after_tax = annual_return * (1 - self._cap_gains_rate)
