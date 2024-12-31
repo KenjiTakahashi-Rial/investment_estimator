@@ -1,5 +1,7 @@
 import sys
-from typing import Callable, Optional, Union
+from typing import Optional, Union
+
+from input_utils import bool_input, float_input, int_input
 
 LARGE_NUM_ABBREVIATIONS = {
     10**3: "K",
@@ -56,80 +58,24 @@ class InvestmentEstimator:
         if age is not None:
             self._age = age
 
-    @staticmethod
-    def _get_input(
-        prompt: str,
-        error_prompt: str,
-        convert_fn: Callable[[str], float],
-        default: Optional[Union[int, float]] = None,
-        enforce_non_negative: bool = True,
-    ) -> Union[int, float]:
-        def convert_input(input_str: str) -> Optional[Union[int, float]]:
-            if default is not None and input_str == "":
-                return default
-            try:
-                return convert_fn(input_str)
-            except ValueError:
-                return None
-
-        value = convert_input(input(prompt))
-        while value is None or (enforce_non_negative and value < 0):
-            value = convert_input(input(error_prompt))
-
-        return value
-
-    @staticmethod
-    def _get_percent_input(prompt: str, default: Optional[float] = None, enforce_non_negative: bool = True) -> float:
-        error_prompt = (
-            "Please enter a non-negative number with a percent symbol or decimal number (e.g. 10.5% or 0.105): "
-        )
-
-        def convert_fn(input_str: str) -> float:
-            if input_str.endswith("%"):
-                input_str = input_str[:-1]
-                return float(input_str) / 100
-
-            as_float = float(input_str)
-            return as_float if as_float < 1 else as_float / 100
-
-        return InvestmentEstimator._get_input(
-            prompt, error_prompt, convert_fn, default=default, enforce_non_negative=enforce_non_negative
-        )
-
-    @staticmethod
-    def _get_int_input(prompt: str, default: Optional[int] = None, enforce_non_negative: bool = True) -> int:
-        error_prompt = "Please enter a non-negative integer: "
-
-        def convert_fn(input_str: str) -> int:
-            digit_str = "".join([c for c in input_str if c.isdigit()])
-            return int(digit_str)
-
-        return int(
-            InvestmentEstimator._get_input(
-                prompt, error_prompt, convert_fn, default=default, enforce_non_negative=enforce_non_negative
-            )
-        )
-
     def _get_inputs(self) -> None:
-        self._cap_gains_rate = self._get_percent_input(
+        self._cap_gains_rate = float_input(
             f"Long-term capital gains tax rate (default {self._DEFAULT_CAP_GAINS_RATE * 100:.0f}%): ",
             self._DEFAULT_CAP_GAINS_RATE,
         )
-        self._principal = self._get_int_input(
-            f"Principal amount (default ${self._DEFAULT_PRINCIPAL}): ", self._DEFAULT_PRINCIPAL
-        )
-        self._annual_return_rate = self._get_percent_input(
+        self._principal = int_input(f"Principal amount (default ${self._DEFAULT_PRINCIPAL}): ", self._DEFAULT_PRINCIPAL)
+        self._annual_return_rate = float_input(
             f"Average annual rate of return of your investment (default {self._DEFAULT_ANNUAL_RETURN_RATE * 100:.0f}%): ",
             self._DEFAULT_ANNUAL_RETURN_RATE,
         )
-        self._monthly_contribution = self._get_int_input(
+        self._monthly_contribution = int_input(
             f"Monthly contribution (default ${self._DEFAULT_MONTHLY_CONTRIBUTION}): ",
             self._DEFAULT_MONTHLY_CONTRIBUTION,
         )
-        self._years_to_invest = self._get_int_input(
+        self._years_to_invest = int_input(
             f"Years to invest (default {self._DEFAULT_YEARS_TO_INVEST}): ", self._DEFAULT_YEARS_TO_INVEST
         )
-        self._age = self._get_int_input(f"Age (Enter to skip): ", 0)
+        self._age = int_input(f"Age (Enter to skip): ", 0)
 
     def _calculate_year_checkpoints(self) -> None:
         year_checkpoints = []

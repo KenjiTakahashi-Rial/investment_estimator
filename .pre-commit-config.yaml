@@ -34,7 +34,7 @@ repos:
     hooks:
       - id: mypy
         pass_filenames: false
-        args: []
+        args: ["--explicit-package-bases", "--namespace-packages"]
 
   - repo: https://github.com/KenjiTakahashi-Rial/check-requirements
     rev: 410897896f48827c5a7e040b5fad56b2a7194a47
