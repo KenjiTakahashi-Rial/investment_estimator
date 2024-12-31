@@ -62,7 +62,7 @@ class InvestmentEstimator:
         error_prompt: str,
         convert_fn: Callable[[str], float],
         default: Optional[Union[int, float]] = None,
-        enforce_positive: bool = True,
+        enforce_non_negative: bool = True,
     ) -> Union[int, float]:
         def convert_input(input_str: str) -> Optional[Union[int, float]]:
             if default is not None and input_str == "":
@@ -73,15 +73,15 @@ class InvestmentEstimator:
                 return None
 
         value = convert_input(input(prompt))
-        while value is None or (enforce_positive and value <= 0):
+        while value is None or (enforce_non_negative and value < 0):
             value = convert_input(input(error_prompt))
 
         return value
 
     @staticmethod
-    def _get_percent_input(prompt: str, default: Optional[float] = None, enforce_positive: bool = True) -> float:
+    def _get_percent_input(prompt: str, default: Optional[float] = None, enforce_non_negative: bool = True) -> float:
         error_prompt = (
-            "Please enter a positive number with a percent symbol or a positive decimal number (e.g. 10.5% or 0.105): "
+            "Please enter a non-negative number with a percent symbol or decimal number (e.g. 10.5% or 0.105): "
         )
 
         def convert_fn(input_str: str) -> float:
@@ -93,12 +93,12 @@ class InvestmentEstimator:
             return as_float if as_float < 1 else as_float / 100
 
         return InvestmentEstimator._get_input(
-            prompt, error_prompt, convert_fn, default=default, enforce_positive=enforce_positive
+            prompt, error_prompt, convert_fn, default=default, enforce_non_negative=enforce_non_negative
         )
 
     @staticmethod
-    def _get_int_input(prompt: str, default: Optional[int] = None, enforce_positive: bool = True) -> int:
-        error_prompt = "Please enter a positive integer: "
+    def _get_int_input(prompt: str, default: Optional[int] = None, enforce_non_negative: bool = True) -> int:
+        error_prompt = "Please enter a non-negative integer: "
 
         def convert_fn(input_str: str) -> int:
             digit_str = "".join([c for c in input_str if c.isdigit()])
@@ -106,7 +106,7 @@ class InvestmentEstimator:
 
         return int(
             InvestmentEstimator._get_input(
-                prompt, error_prompt, convert_fn, default=default, enforce_positive=enforce_positive
+                prompt, error_prompt, convert_fn, default=default, enforce_non_negative=enforce_non_negative
             )
         )
 
@@ -129,8 +129,7 @@ class InvestmentEstimator:
         self._years_to_invest = self._get_int_input(
             f"Years to invest (default {self._DEFAULT_YEARS_TO_INVEST}): ", self._DEFAULT_YEARS_TO_INVEST
         )
-        age = self._get_int_input(f"Age (Enter to skip): ", sys.maxsize)
-        self._age = 0 if age == sys.maxsize else age
+        self._age = self._get_int_input(f"Age (Enter to skip): ", 0)
 
     def _calculate_year_checkpoints(self) -> None:
         year_checkpoints = []
