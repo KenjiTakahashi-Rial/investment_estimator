@@ -86,12 +86,12 @@ class InvestmentEstimator:
 
         self._year_checkpoints = tuple(year_checkpoints)
 
-    def _invest_monthly(self, months: int) -> float:
+    def _invest(self, years: int) -> float:
         total = float(self._principal)
 
-        for _ in range(months):
-            total += self._monthly_contribution
-            total *= 1 + (self._annual_return_rate / 12)
+        for _ in range(years):
+            total += self._monthly_contribution * 12
+            total *= 1 + self._annual_return_rate
 
         return total
 
@@ -118,8 +118,7 @@ class InvestmentEstimator:
 
         for years in self._year_checkpoints:
             age_str = f" (age {self._age + years})" if self._age > 0 else ""
-            months = years * 12
-            total = self._invest_monthly(months)
+            total = self._invest(years)
 
             if total == float("inf"):
                 print(
@@ -127,7 +126,7 @@ class InvestmentEstimator:
                 )
                 return
 
-            principal = self._principal + self._monthly_contribution * months
+            principal = self._principal + self._monthly_contribution * years * 12
             profit = total - principal
             annual_return = total * self._annual_return_rate
             annual_return_after_tax = annual_return * (1 - self._cap_gains_rate)
