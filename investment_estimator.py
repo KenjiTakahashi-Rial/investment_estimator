@@ -1,7 +1,8 @@
 import sys
+from dataclasses import dataclass
 from typing import Optional, Union
 
-from input_utils import bool_input, float_input, int_input
+from input_utils import float_input, int_input
 
 LARGE_NUM_ABBREVIATIONS = {
     10**3: "K",
@@ -18,9 +19,22 @@ LARGEST_NUM = list(LARGE_NUM_ABBREVIATIONS.keys())[-1]
 LARGEST_NUM_ABBREVIATION = list(LARGE_NUM_ABBREVIATIONS.values())[-1]
 
 
+@dataclass(frozen=True)
+class CapitalGainsTaxRate:
+    rate: float
+    ceiling: float
+
+
+# Updated for filing as single in 2025 (federal)
+LONG_TERM_CAPITAL_GAINS_TAX = (
+    CapitalGainsTaxRate(rate=0.0, ceiling=48_350.0),
+    CapitalGainsTaxRate(rate=0.15, ceiling=533_400.0),
+    CapitalGainsTaxRate(rate=0.20, ceiling=float("inf")),
+)
+
+
 class InvestmentEstimator:
     _DEFAULT_ANNUAL_RETURN_RATE = 0.1
-    _DEFAULT_CAP_GAINS_RATE = 0.15
     _DEFAULT_MONTHLY_CONTRIBUTION = 0
     _DEFAULT_PRINCIPAL = 0
     _DEFAULT_YEARS_TO_INVEST = 20
@@ -29,14 +43,12 @@ class InvestmentEstimator:
 
     def __init__(
         self,
-        cap_gains_rate: Optional[float] = None,
         principal: Optional[int] = None,
         annual_return_rate: Optional[float] = None,
         monthly_contribution: Optional[int] = None,
         years_to_invest: Optional[int] = None,
         age: Optional[int] = None,
     ):
-        self._cap_gains_rate = self._DEFAULT_CAP_GAINS_RATE
         self._principal = self._DEFAULT_PRINCIPAL
         self._annual_return_rate = self._DEFAULT_ANNUAL_RETURN_RATE
         self._monthly_contribution = self._DEFAULT_MONTHLY_CONTRIBUTION
@@ -45,8 +57,6 @@ class InvestmentEstimator:
 
         self._year_checkpoints: tuple[int, ...]
 
-        if cap_gains_rate is not None:
-            self._cap_gains_rate = cap_gains_rate
         if principal is not None:
             self._principal = principal
         if annual_return_rate is not None:
@@ -71,10 +81,6 @@ class InvestmentEstimator:
             f"Average annual rate of return of your investment (default {self._DEFAULT_ANNUAL_RETURN_RATE * 100:.0f}%): ",
             self._DEFAULT_ANNUAL_RETURN_RATE,
         )
-        self._cap_gains_rate = float_input(
-            f"Long-term capital gains tax rate (default {self._DEFAULT_CAP_GAINS_RATE * 100:.0f}%): ",
-            self._DEFAULT_CAP_GAINS_RATE,
-        )
         self._age = int_input(f"Age (Enter to skip): ", 0)
 
     def _calculate_year_checkpoints(self) -> None:
@@ -94,6 +100,18 @@ class InvestmentEstimator:
             total *= 1 + self._annual_return_rate
 
         return total
+
+    @staticmethod
+    def _tax(gross: float) -> float:
+        net = 0.0
+        for tax in LONG_TERM_CAPITAL_GAINS_TAX:
+            if gross <= 0:
+                break
+
+            net += min(gross, tax.ceiling) * (1 - tax.rate)
+            gross -= tax.ceiling
+
+        return net
 
     @staticmethod
     def _format_num(num: Union[int, float]) -> str:
@@ -129,12 +147,12 @@ class InvestmentEstimator:
             principal = self._principal + self._monthly_contribution * years * 12
             profit = total - principal
             annual_return = total * self._annual_return_rate
-            annual_return_after_tax = annual_return * (1 - self._cap_gains_rate)
+            after_tax = self._tax(annual_return)
             print(
                 f"After {years} years{age_str} you would have {self._format_num(total)}.\n"
                 f"\tYour total principal investment is {self._format_num(principal)}.\n"
                 f"\tYour profit is {self._format_num(profit)}.\n"
-                f"\tYour annual return is {self._format_num(annual_return)} ({self._format_num(annual_return_after_tax)} after tax)."
+                f"\tYour annual return is {self._format_num(annual_return)} ({self._format_num(after_tax)} after tax)."
             )
 
 
